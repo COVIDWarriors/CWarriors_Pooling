@@ -1,0 +1,31 @@
+      <table class="table table-hoverable table-responsive table-striped">
+        <thead class="thead-light">
+          <tr>
+            <th>&nbsp;</th>
+            {% for c in rack.listCols %}
+            <th>{{ c.1 }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+      {% regroup rack.grid by row as grid %}
+      {% for row, cols in grid %}
+        <tr>
+          <td><strong>{{ row }}</strong></td>
+          {% for g in cols %}
+          <td id="grid{{g.row}}{{g.col}}">
+            {% if g.tube %}
+            <button class="btn btn-success"
+                    onClick="$('#SampleCode').html('{{g.tube}}');
+                             $('#SampleData').load('{% url "pooling:tube" g.tubeid %}');
+                             $('#Sample').modal();
+                            ">
+              {{g.samples}}
+            </button>
+            {% else %}
+            0
+            {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+      </table>

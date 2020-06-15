@@ -1,0 +1,345 @@
+{% extends "pooling/base.html" %}
+{% comment %}
+vim:ts=2:expandtab:ai
+$Id: $
+{% endcomment %}
+{% load i18n %}
+
+    {% block middle %}
+    <div id="Rack" class="modal fade" role="dialog">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h3 class="modal-title">
+              {% trans "Rack" %}: <span id="RackCode"></span>
+            </h3>
+          </div>
+          <div class="modal-body" id="RackData">
+          </div>
+        </div>
+      </div>
+    </div> <!-- Rack modal ends -->
+    <div id="Sample" class="modal fade" role="dialog">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">
+              &times;</button>
+            <h3 class="modal-title">
+              {% trans "Tube" %}: <span id="SampleCode"></span>
+            </h3>
+          </div>
+          <div class="modal-body" id="SampleData">
+          </div>
+        </div>
+      </div>
+    </div> <!-- Sample modal ends -->
+    <div class="panel panel-primary col-md-12">
+      <div class="panel-heading">
+        <h3>{% trans "Controls" %}</h3>
+      </div>
+      <div class="panel-body">
+        <form id="batchform" action="batch" method="POST">
+          {% csrf_token %}
+        <div class="row">
+          <span class="col-md-2 text-left">
+            <a href="upload" class="btn btn-success text-right">
+               {% trans "Upload sample batch" %}</a>
+          </span>
+          <span class="col-md-8 text-center">
+              <select id="robotid" name="robotid" class="form-control">
+                <option value="0"></option>
+                {% for r in robots %}
+                {% if r == robot %}
+                <option selected value="{{r.id}}">{{r}}</option>
+                {% else %}
+                <option value="{{r.id}}">{{r}}</option>
+                {% endif %}
+                {% endfor %}
+              </select>
+          </span>
+          <span class="col-md-2 text-right">&nbsp;</span>
+        </div>
+        <div class="row">
+          <span class="col-md-2 text-left">
+            <a href="history" class="btn btn-success text-right">
+               {% trans "Show processed batches" %}</a>
+          </span>
+          <span class="col-md-8 text-center">
+              <select id="batchid" name="batchid" class="form-control">
+                <option value="0"></option>
+                {% for b in batches %}
+                {% if b == batch %}
+                <option selected value="{{b.id}}">{{b}}</option>
+                {% else %}
+                <option value="{{b.id}}">{{b}}</option>
+                {% endif %}
+                {% endfor %}
+              </select>
+          </span>
+          <span class="col-md-2 text-right">
+              <input type="Submit" class="btn btn-success" value="Load batch">
+          </span>
+        </div>
+        </form>
+      </div>
+    </div> <!-- Controls panel ends -->
+    <div class="panel panel-primary col-md-12">
+      <div class="panel-heading">
+        <h3>{% trans "Pooling station" %}</h3>
+      </div>
+      <div class="panel-body">
+        <div class="row">
+          <div class="panel panel-primary col-md-4">
+            <div class="panel-heading">
+            {% if rack1 %}
+              <button class="btn btn-success"
+                      onClick="$('#RackCode').html('{{rack1.identifier}}');
+                               $('#RackData').load('{% url "pooling:show" rack1.id %}');
+                               $('#Rack').modal();
+                              ">
+              {% trans "View" %}</button>
+              {{ rack1.identifier }}
+            {% endif %}
+            </div>
+            <div class="panel-body">
+              <table class="table table-hoverable table-responsive">
+                {% regroup rack1.grid by row as row_list %}
+                {% for row, cols in row_list %}
+                <tr>
+                   <td><strong>{{ row }}</strong></td>
+                   {% for g in cols %}
+                   <td id="R{{rack1.position}}{{g.row}}{{g.col}}"
+                      style="text-align: center;
+                             {% if g.samples %}background-color: green{% endif %}">
+                      {{g.samples}}
+                  </td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </table>
+            </div>
+          </div> <!-- Position 4 ends -->
+          <div class="col-md-4">
+            <div class="panel panel-primary col-md-8">
+              <div class="panel-heading">
+                <h4>{% trans "Load samples on 24 4x6 racks" %}</h4>
+              </div>
+              <div class="panel-body">
+                <span class="col-md-10 text-left">
+                  <form id="sampleform" method="POST" action="loadsample">
+                    {% csrf_token %}
+                    {% trans "Sample ID" %} <input name="identifier" id="identifier">
+                  </form>
+                </span>
+              </div>
+            </div> <!-- Sample entry area ends -->
+            <div class="panel panel-primary col-md-4 text-center">
+              <a class="col-md-12 btn btn-success p-3 text-center" href="move">
+                {% if robot.connected %}
+                {% trans "Start Pooling" %}
+                {% else %}
+                {% trans "End Pooling" %}
+                {% endif %}
+              </a>
+            </div> <!-- End Pool button ends -->
+            <div class="panel panel-primary col-md-8">
+              <div class="panel-heading">
+              <h4>{% trans "Load pool tubes on 4x6 rack on tray 2" %}</h4>
+              </div>
+              <div class="panel-body">
+                <span class="col-md-10 text-left">
+                  <form id="tubeform" method="POST" action="loadtube">
+                    {% csrf_token %}
+                    {% trans "Tube ID" %} <input name="tubeid" id="tubeid">
+                  </form>
+                </span>
+              </div>
+            </div> <!-- Tube entry area ends -->
+            <div class="panel panel-primary col-md-4 text-center">
+              <a class="col-md-12 btn btn-danger p-3 text-center" href="finish">
+                {% trans "Remove Pools Rack" %}
+              </a>
+            </div> <!-- End process button ends -->
+          </div> <!-- Position 5 ends -->
+          <div class="panel panel-primary col-md-4">
+            <div class="panel-heading">
+            {% if rack1 %}
+            <button class="btn btn-success"
+                    onClick="$('#RackCode').html('{{rack2.identifier}}');
+                             $('#RackData').load('{% url "pooling:show" rack2.id %}');
+                             $('#Rack').modal();
+                            ">
+              {% trans "View" %}</button>
+            {{ rack2.identifier }}
+            {% endif %}
+            </div>
+            <div class="panel-body">
+              <table class="table table-hoverable table-responsive">
+                {% regroup rack2.grid by row as row_list %}
+                {% for row, cols in row_list %}
+                <tr>
+                  <td><strong>{{ row }}</strong></td>
+                  {% for g in cols %}
+                  <td id="R{{rack2.position}}{{g.row}}{{g.col}}"
+                      style="text-align: center;
+                             {% if g.samples %}background-color: green{% endif %}">
+                      {{g.samples}}
+                  </td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </table>
+            </div>
+          </div> <!-- Position 6 ends -->
+        </div> <!-- First row ends -->
+        <div class="row">
+          <div class="panel panel-primary col-md-4">
+            <div class="panel-heading">
+            {% if rack1 %}
+            <button class="btn btn-success"
+                    onClick="$('#RackCode').html('{{rack3.identifier}}');
+                             $('#RackData').load('{% url "pooling:show" rack3.id %}');
+                             $('#Rack').modal();
+                            ">
+              {% trans "View" %}</button>
+            {{ rack3.identifier }}
+            {% endif %}
+            </div>
+            <div class="panel-body">
+              <table class="table table-hoverable table-responsive">
+                {% regroup rack3.grid by row as row_list %}
+                {% for row, cols in row_list %}
+                <tr>
+                  <td><strong>{{ row }}</strong></td>
+                  {% for g in cols %}
+                  <td id="R{{rack3.position}}{{g.row}}{{g.col}}"
+                      style="text-align: center;
+                             {% if g.samples %}background-color: green{% endif %}">
+                      {{g.samples}}
+                  </td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </table>
+            </div>
+          </div> <!-- Position 1 ends -->
+          <div class="panel panel-primary col-md-4">
+            <div class="panel-heading">
+            {% if rack1 %}
+            <button class="btn btn-success"
+                    onClick="$('#RackCode').html('{{rackf.identifier}}');
+                             $('#RackData').load('{% url "pooling:show" rackf.id %}');
+                             $('#Rack').modal();
+                            ">
+              {% trans "View" %}</button>
+            {{ rackf.identifier }}
+            {% endif %}
+            </div>
+            <div class="panel-body">
+              <table class="table table-hoverable table-responsive">
+                {% regroup rackf.grid by row as row_list %}
+                {% for row, cols in row_list %}
+                <tr>
+                  <td><strong>{{ row }}</strong></td>
+                  {% for g in cols %}
+                  <td id="Rf{{g.row}}{{g.col}}"
+                      style="text-align: center;
+                             {% if g.tube %}background-color: green{% endif %}">
+                    <span id="Cf{{g.row}}{{g.col}}">
+                      {{g.samples}}</span>
+                  </td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </table>
+            </div>
+          </div> <!-- Position 2 ends -->
+          <div class="panel panel-primary col-md-4">
+            <div class="panel-heading">
+            {% if rack1 %}
+              <button class="btn btn-success"
+                      onClick="$('#RackCode').html('{{rack4.identifier}}');
+                               $('#RackData').load('{% url "pooling:show" rack4.id %}');
+                               $('#Rack').modal();
+                              ">
+                {% trans "View" %}</button>
+              {{ rack4.identifier }}
+            {% endif %}
+            </div>
+            <div class="panel-body">
+              <table class="table table-hoverable table-responsive">
+                {% regroup rack4.grid by row as row_list %}
+                {% for row, cols in row_list %}
+                <tr>
+                  <td><strong>{{ row }}</strong></td>
+                  {% for g in cols %}
+                  <td id="R{{rack4.position}}{{g.row}}{{g.col}}"
+                      style="text-align: center;
+                             {% if g.samples %}background-color: green{% endif %}">
+                      {{g.samples}}
+                  </td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </table>
+            </div>
+          </div> <!-- Position 3 ends -->
+        </div> <!-- Second row ends -->
+      </div> <!-- Racks tray ends -->
+    </div> <!-- Pooling station ends -->
+<script nonce="{{settings.VARIABLE_NONCE_CSP}}" type="text/javascript">
+    var sfrm = $('#sampleform');
+    sfrm.submit(function (e) {
+        e.preventDefault();
+        $.ajax({
+            type: sfrm.attr('method'),
+            url: sfrm.attr('action'),
+            data: sfrm.serialize(),
+            success: function (data) {
+                $('#identifier').val('');
+                $('#R'+data.pos+''+data.row+''+data.col).css('background-color','green');
+                $('#R'+data.pos+''+data.row+''+data.col).html('1');
+            },
+            error: function (data) {
+                alert(data.responseJSON.error);
+            },
+        });
+    });
+    var tfrm = $('#tubeform');
+    tfrm.submit(function (e) {
+        e.preventDefault();
+        $.ajax({
+            type: tfrm.attr('method'),
+            url: tfrm.attr('action'),
+            data: tfrm.serialize(),
+            success: function (data) {
+                $('#tubeid').val('');
+                $('#Rf'+data.row+''+data.col).css('background-color','green');
+                $('#Rf'+data.row+''+data.col).html(data.samples);
+            },
+            error: function (data) {
+                alert(data.responseJSON.error);
+            },
+        });
+    });
+{% if refresh %}}
+(function worker() {
+    $.getJSON(
+        url: '{% url 'pooling:refresh' %}',
+        success: function(result){
+            $.each(result, function(data){
+              $(data.position).html(data.samples);  
+              //$(data.position).css({'background-color': '#fff'});
+              })
+            },
+        complete: function() {
+            // Schedule the next request when the current one's complete
+            setTimeout(worker, {{ refresh }});
+            }
+        );
+})();
+{% endif %}
+</script>
+    {% endblock %}

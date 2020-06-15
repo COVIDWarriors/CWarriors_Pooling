@@ -1,0 +1,14 @@
+{% load i18n %}
+<table class="table table-hoverable table-responsive table-striped">
+  <thead class="thead-light">
+    <tr>
+      <th>{% trans "Batch" %}</th>
+      <th>{% trans "Code" %}</th>
+    </tr>
+  </thead>
+  {% for s in tube.sample_set.all %}
+  <tr>
+    <td>{{ s.batch.identifier }}</td><td>{{ s.code }}</td>
+  </tr>
+  {% endfor %}
+</table>
