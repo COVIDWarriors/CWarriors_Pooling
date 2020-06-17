@@ -7,10 +7,12 @@ $Id: $
 
     {% block middle %}
     <div id="Rack" class="modal fade" role="dialog">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <button type="button" class="close" data-dismiss="modal">
+              &times;
+            </button>
             <h3 class="modal-title">
               {% trans "Rack" %}: <span id="RackCode"></span>
             </h3>
@@ -25,7 +27,8 @@ $Id: $
         <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal">
-              &times;</button>
+              &times;
+            </button>
             <h3 class="modal-title">
               {% trans "Tube" %}: <span id="SampleCode"></span>
             </h3>
@@ -47,18 +50,7 @@ $Id: $
             <a href="upload" class="btn btn-success text-right">
                {% trans "Upload sample batch" %}</a>
           </span>
-          <span class="col-md-8 text-center">
-              <select id="robotid" name="robotid" class="form-control">
-                <option value="0"></option>
-                {% for r in robots %}
-                {% if r == robot %}
-                <option selected value="{{r.id}}">{{r}}</option>
-                {% else %}
-                <option value="{{r.id}}">{{r}}</option>
-                {% endif %}
-                {% endfor %}
-              </select>
-          </span>
+          <span class="col-md-8 text-center"> &nbsp; </span>
           <span class="col-md-2 text-right">&nbsp;</span>
         </div>
         <div class="row">
@@ -93,26 +85,26 @@ $Id: $
         <div class="row">
           <div class="panel panel-primary col-md-4">
             <div class="panel-heading">
-            {% if rack1 %}
+            {% if rack4 %}
               <button class="btn btn-success"
-                      onClick="$('#RackCode').html('{{rack1.identifier}}');
-                               $('#RackData').load('{% url "pooling:show" rack1.id %}');
+                      onClick="$('#RackCode').html('{{rack4.identifier}}');
+                               $('#RackData').load('{% url "pooling:show" rack4.id %}');
                                $('#Rack').modal();
                               ">
               {% trans "View" %}</button>
-              {{ rack1.identifier }}
+              {{ rack4.identifier }}
             {% endif %}
             </div>
             <div class="panel-body">
               <table class="table table-hoverable table-responsive">
-                {% regroup rack1.grid by row as row_list %}
+                {% regroup rack4.grid by row as row_list %}
                 {% for row, cols in row_list %}
                 <tr>
                    <td><strong>{{ row }}</strong></td>
                    {% for g in cols %}
-                   <td id="R{{rack1.position}}{{g.row}}{{g.col}}"
+                   <td id="R{{rack4.position}}{{g.row}}{{g.col}}"
                       style="text-align: center;
-                             {% if g.samples %}background-color: green{% endif %}">
+                      {% if g.samples %}background-color: green{% endif %}">
                       {{g.samples}}
                   </td>
                   {% endfor %}
@@ -130,18 +122,15 @@ $Id: $
                 <span class="col-md-10 text-left">
                   <form id="sampleform" method="POST" action="loadsample">
                     {% csrf_token %}
-                    {% trans "Sample ID" %} <input name="identifier" id="identifier">
+                    {% trans "Sample ID" %}
+                    <input name="identifier" id="identifier">
                   </form>
                 </span>
               </div>
             </div> <!-- Sample entry area ends -->
             <div class="panel panel-primary col-md-4 text-center">
               <a class="col-md-12 btn btn-success p-3 text-center" href="move">
-                {% if robot.connected %}
-                {% trans "Start Pooling" %}
-                {% else %}
-                {% trans "End Pooling" %}
-                {% endif %}
+                {% trans "Simulate Pooling" %}
               </a>
             </div> <!-- End Pool button ends -->
             <div class="panel panel-primary col-md-8">
@@ -158,31 +147,32 @@ $Id: $
               </div>
             </div> <!-- Tube entry area ends -->
             <div class="panel panel-primary col-md-4 text-center">
-              <a class="col-md-12 btn btn-danger p-3 text-center" href="finish">
+              <a class="col-md-12 btn btn-danger p-3 text-center"
+                 href="finish">
                 {% trans "Remove Pools Rack" %}
               </a>
             </div> <!-- End process button ends -->
           </div> <!-- Position 5 ends -->
           <div class="panel panel-primary col-md-4">
             <div class="panel-heading">
-            {% if rack1 %}
+            {% if rack6 %}
             <button class="btn btn-success"
-                    onClick="$('#RackCode').html('{{rack2.identifier}}');
-                             $('#RackData').load('{% url "pooling:show" rack2.id %}');
+                    onClick="$('#RackCode').html('{{rack6.identifier}}');
+                             $('#RackData').load('{% url "pooling:show" rack6.id %}');
                              $('#Rack').modal();
                             ">
               {% trans "View" %}</button>
-            {{ rack2.identifier }}
+            {{ rack6.identifier }}
             {% endif %}
             </div>
             <div class="panel-body">
               <table class="table table-hoverable table-responsive">
-                {% regroup rack2.grid by row as row_list %}
+                {% regroup rack6.grid by row as row_list %}
                 {% for row, cols in row_list %}
                 <tr>
                   <td><strong>{{ row }}</strong></td>
                   {% for g in cols %}
-                  <td id="R{{rack2.position}}{{g.row}}{{g.col}}"
+                  <td id="R{{rack6.position}}{{g.row}}{{g.col}}"
                       style="text-align: center;
                              {% if g.samples %}background-color: green{% endif %}">
                       {{g.samples}}
@@ -199,22 +189,22 @@ $Id: $
             <div class="panel-heading">
             {% if rack1 %}
             <button class="btn btn-success"
-                    onClick="$('#RackCode').html('{{rack3.identifier}}');
-                             $('#RackData').load('{% url "pooling:show" rack3.id %}');
+                    onClick="$('#RackCode').html('{{rack1.identifier}}');
+                             $('#RackData').load('{% url "pooling:show" rack1.id %}');
                              $('#Rack').modal();
                             ">
               {% trans "View" %}</button>
-            {{ rack3.identifier }}
+            {{ rack1.identifier }}
             {% endif %}
             </div>
             <div class="panel-body">
               <table class="table table-hoverable table-responsive">
-                {% regroup rack3.grid by row as row_list %}
+                {% regroup rack1.grid by row as row_list %}
                 {% for row, cols in row_list %}
                 <tr>
                   <td><strong>{{ row }}</strong></td>
                   {% for g in cols %}
-                  <td id="R{{rack3.position}}{{g.row}}{{g.col}}"
+                  <td id="R{{rack1.position}}{{g.row}}{{g.col}}"
                       style="text-align: center;
                              {% if g.samples %}background-color: green{% endif %}">
                       {{g.samples}}
@@ -227,7 +217,7 @@ $Id: $
           </div> <!-- Position 1 ends -->
           <div class="panel panel-primary col-md-4">
             <div class="panel-heading">
-            {% if rack1 %}
+            {% if rackf %}
             <button class="btn btn-success"
                     onClick="$('#RackCode').html('{{rackf.identifier}}');
                              $('#RackData').load('{% url "pooling:show" rackf.id %}');
@@ -258,24 +248,24 @@ $Id: $
           </div> <!-- Position 2 ends -->
           <div class="panel panel-primary col-md-4">
             <div class="panel-heading">
-            {% if rack1 %}
+            {% if rack3 %}
               <button class="btn btn-success"
-                      onClick="$('#RackCode').html('{{rack4.identifier}}');
-                               $('#RackData').load('{% url "pooling:show" rack4.id %}');
+                      onClick="$('#RackCode').html('{{rack3.identifier}}');
+                               $('#RackData').load('{% url "pooling:show" rack3.id %}');
                                $('#Rack').modal();
                               ">
                 {% trans "View" %}</button>
-              {{ rack4.identifier }}
+              {{ rack3.identifier }}
             {% endif %}
             </div>
             <div class="panel-body">
               <table class="table table-hoverable table-responsive">
-                {% regroup rack4.grid by row as row_list %}
+                {% regroup rack3.grid by row as row_list %}
                 {% for row, cols in row_list %}
                 <tr>
                   <td><strong>{{ row }}</strong></td>
                   {% for g in cols %}
-                  <td id="R{{rack4.position}}{{g.row}}{{g.col}}"
+                  <td id="R{{rack3.position}}{{g.row}}{{g.col}}"
                       style="text-align: center;
                              {% if g.samples %}background-color: green{% endif %}">
                       {{g.samples}}
@@ -300,7 +290,7 @@ $Id: $
             success: function (data) {
                 $('#identifier').val('');
                 $('#R'+data.pos+''+data.row+''+data.col).css('background-color','green');
-                $('#R'+data.pos+''+data.row+''+data.col).html('1');
+                $('#R'+data.pos+''+data.row+''+data.col).html(data.samples);
             },
             error: function (data) {
                 alert(data.responseJSON.error);

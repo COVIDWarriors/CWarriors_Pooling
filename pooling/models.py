@@ -211,24 +211,6 @@ class Rack(models.Model):
         return grid
 
    
-    def insertSample(self,sample,pool=False):
-        """
-        Places a sample in the first tube in the rack that's not full
-        The algorithm works in row first mode, i.e.:
-        A1,A2,A3,...,H10,H11,H12
-        """
-        if self.isFull(sample.batch.poolsize): return False
-        # Find the first tube that's not full
-        t = self.tube_set.order_by('row','col')
-        t = t.annotate(samples=models.Count('sample'))
-        if pool:
-            t = t.filter(samples__lt=sample.batch.poolsize).first()
-        else:
-            t = t.filter(samples=0).first()
-        sample.tube = t
-        sample.save()
-        return True
-
     def insertTube(self,tube):
         """
         Places a tube in the first free position in the rack
@@ -258,6 +240,33 @@ class Rack(models.Model):
         tube.save()
 
         return True
+
+
+    def insertSample(self,sample,pool=False):
+        """
+        Places a sample in the first tube in the rack that's not full
+        The algorithm works in row first mode, i.e.:
+        A1,A2,A3,...,H10,H11,H12
+        """
+        samplesTube = 1
+        if pool:
+            samplesTube = sample.batch.poolsize
+        if self.isFull(samplesTube): return False
+        # Find the first tube that's not full
+        t = self.tube_set.order_by('row','col')
+        t = t.annotate(samples=models.Count('sample'))
+        if pool:
+            t = t.filter(samples__lt=sample.batch.poolsize).first()
+        else:
+            t = t.filter(samples=0).first()
+            if not t:
+                t = Tube()
+                t.identifier = sample.code
+                self.insertTube(t)
+        sample.tube = t
+        sample.save()
+        return True
+
 
     def __str__(self):
         return _('{0} with {1} samples {2}').format(

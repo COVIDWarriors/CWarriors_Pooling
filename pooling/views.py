@@ -25,18 +25,10 @@ def index(request):
     """
 
     batch = Batch()
-    robot = False
     # List active batches
     batches = Batch.objects.filter(finished__isnull=True)
-    # List idle robots
-    robots = [r for r in Robot.objects.all() if len(r.rack_set.all()) == 0]
-    # Now the active robot and batch
-    robotid = request.session.get('pooling_robot',False)
+    # Now the active batch
     batchid = request.session.get('pooling_batch',False)
-    if robotid:
-        robot = get_object_or_404(Robot,identifier=robotid)
-        # We add the current robot to the front of list
-        robots.insert(0,robot)
     if batchid:
         batch = get_object_or_404(Batch,identifier=batchid)
     # The rack list
@@ -48,25 +40,23 @@ def index(request):
     # but only now that we know the robot we are working with
     for tray in [2]+ordering:
         r = Rack.objects.filter(position=tray)
-        if robot: r.filter(robot=robot)
         if not r:
             racks[tray] = Rack()
             racks[tray].racktype = 1
-            if robot: racks[tray].robot = robot
             racks[tray].position = tray
             racks[tray].save()
         else:
             racks[tray] = r[0]
         # If sample rack has no tubes, we create them
-        if ( not racks[tray].position == 2 and
-             len(racks[tray].tube_set.all()) == 0 ):
-            for col in racks[tray].listCols():
-                for row in racks[tray].listRows():
-                    tube = Tube()
-                    tube.rack = racks[tray]
-                    tube.row = row
-                    tube.col = col[0]
-                    tube.save()
+        #if ( not racks[tray].position == 2 and
+        #     len(racks[tray].tube_set.all()) == 0 ):
+        #    for col in racks[tray].listCols():
+        #        for row in racks[tray].listRows():
+        #            tube = Tube()
+        #            tube.rack = racks[tray]
+        #            tube.row = row
+        #            tube.col = col[0]
+        #            tube.save()
             
     # If there is no current rack,
     # or the one in the session is not anymore in the robot
@@ -75,36 +65,29 @@ def index(request):
     if current not in [racks[r].id for r in racks ]:
         request.session['pooling_rack'] = racks[ordering[0]].id
 
-    if robot.connected:
-        refresh = settings.POOLING_REFRESH
+    #if robot.connected:
+    #    refresh = settings.POOLING_REFRESH
     return render(request,'pooling/index.html',{'refresh': refresh,
                                                 'batches': batches,
-                                                'robots': robots,
-                                                'robot': robot,
                                                 'batch': batch,
                                                 'rackf': racks[2],
-                                                'rack1': racks[ordering[0]],
-                                                'rack2': racks[ordering[1]],
-                                                'rack3': racks[ordering[2]],
-                                                'rack4': racks[ordering[3]]})
+                                                'rack1': racks[1],
+                                                'rack3': racks[3],
+                                                'rack4': racks[4],
+                                                'rack6': racks[6]})
 
 
 def batch(request):
     """
-    Selects the batch to draw samples from and the robot to place the racks on
+    Selects the batch to draw samples from
     """
 
     if request.method == "GET":
-       robotid = request.GET.get('robotid',None)
        batchid = request.GET.get('batchid',None)
     if request.method == "POST":
-       robotid = request.POST.get('robotid',None)
        batchid = request.POST.get('batchid',None)
-    if robotid:
-        robot = get_object_or_404(Robot,pk=robotid)
     if batchid:
         batch = get_object_or_404(Batch,pk=batchid)
-    request.session['pooling_robot'] = robot.identifier
     request.session['pooling_batch'] = batch.identifier
     request.session['pooling_poolsize'] = batch.poolsize
     return HttpResponseRedirect(reverse('pooling:inicio'))
@@ -241,7 +224,7 @@ def finish(request):
                 messages.error(request,_('Rack {0} is nor empty').format(rack))
                 return HttpResponseRedirect(reverse('pooling:inicio'))
 
-    # And the pooling racks leaves the robot as well
+    # And the pooling racks leave the robot as well
     rack.position = 0
     rack.finished = True
     rack.save()
@@ -299,9 +282,6 @@ def loadSample(request):
     The algorithm works in row first mode, i.e.: A1,A2,A3,...,H10,H11,H12
     """
 
-    # We are working on a given robot
-    robotid = request.session.get('pooling_robot',False)
-    robot = get_object_or_404(Robot,identifier=robotid)
     rackid = request.session.get('pooling_rack', 0)
     racks = Rack.objects.filter(id=rackid)
     if not len(racks) == 1:
@@ -318,7 +298,7 @@ def loadSample(request):
     if full:
         # Let's start filling the next rack
         nextrack = ordering[ordering.index(rack.position)+1]
-        rack = get_object_or_404(Rack,robot=robot,position=nextrack)
+        rack = get_object_or_404(Rack,position=nextrack)
         request.session['pooling_rack'] = rack.id
     batchid = request.session.get('pooling_batch',0)
     if request.method == 'POST':
@@ -346,7 +326,8 @@ def loadSample(request):
         sample[0].batch.started = datetime.datetime.now()
         sample[0].batch.save()
 
-    return JsonResponse({'row': tube.row, 'col': tube.col, 'pos': rack.position})
+    return JsonResponse({'row': tube.row, 'col': tube.col,
+                         'pos': rack.position, 'samples': sample[0].code })
 
 
 def viewtube(request,tubeid):
@@ -397,16 +378,20 @@ def upload(request):
     batch.save()
     request.session['pooling_batch'] = batch.identifier
     request.session['pooling_poolsize'] = batch.poolsize
-    import csv,io
-    samples = request.FILES['samples']
-    samples.seek(0)
-    for line in csv.DictReader(io.StringIO(samples.read().decode('utf-8'))):
-        sample = Sample()
-        sample.batch = batch
-        sample.code = line['code']
-        sample.save()
+    # If we do not have a file, it's a "free" batch
+    if len(request.FILES):
+        samples = request.FILES['samples']
+        import csv,io
+        samples.seek(0)
+        lines = csv.DictReader(io.StringIO(samples.read().decode('utf-8')))
+        for line in lines:
+            sample = Sample()
+            sample.batch = batch
+            sample.code = line['code']
+            sample.save()
+    text = _('Batch {0} with {1} samples uploaded successfully')
     messages.success(request,
-                     _('Batch {0} with {1} samples uploaded successfully').format(
-                       batch.identifier,len(batch.sample_set.all())))
+                     text.format(batch.identifier,
+                                 len(batch.sample_set.all())))
     return HttpResponseRedirect(reverse('pooling:inicio'))
 
