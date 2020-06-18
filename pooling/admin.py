@@ -21,7 +21,6 @@ admin.site.register(Technician,TechnicianAdmin)
 
 class RobotAdmin(admin.ModelAdmin):
     model = Robot
-    fields = ['identifier','ip','connected']
     list_editable = ['ip','connected']
     list_display = ['id','identifier','ip','connected']
     list_display_links = ['id','identifier']

@@ -81,7 +81,9 @@ class Batch(models.Model):
                                   max_length=32, blank=True, null=True,
                                   db_index=True, editable=False)
     technician = models.ForeignKey(Technician)
-    poolsize = models.IntegerField(verbose_name=_('Pool size'),default=6)
+    poolsize = models.IntegerField(verbose_name=_('Pool size'),
+                                   default=settings.POOL_TUBE_SAMPLES)
+    preloaded = models.BooleanField(verbose_name=_('Pre-loaded batch'),default=True)
     started = models.DateTimeField(_('Processing started on'),
                                    db_index=True,null=True,blank=True)
     finished = models.DateTimeField(_('Processing completed on'),

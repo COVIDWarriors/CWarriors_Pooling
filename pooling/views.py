@@ -47,16 +47,6 @@ def index(request):
             racks[tray].save()
         else:
             racks[tray] = r[0]
-        # If sample rack has no tubes, we create them
-        #if ( not racks[tray].position == 2 and
-        #     len(racks[tray].tube_set.all()) == 0 ):
-        #    for col in racks[tray].listCols():
-        #        for row in racks[tray].listRows():
-        #            tube = Tube()
-        #            tube.rack = racks[tray]
-        #            tube.row = row
-        #            tube.col = col[0]
-        #            tube.save()
             
     # If there is no current rack,
     # or the one in the session is not anymore in the robot
@@ -65,8 +55,6 @@ def index(request):
     if current not in [racks[r].id for r in racks ]:
         request.session['pooling_rack'] = racks[ordering[0]].id
 
-    #if robot.connected:
-    #    refresh = settings.POOLING_REFRESH
     return render(request,'pooling/index.html',{'refresh': refresh,
                                                 'batches': batches,
                                                 'batch': batch,
@@ -307,16 +295,24 @@ def loadSample(request):
         response = JsonResponse({"error": _("No Sampe Identifier")})
         response.status_code = 404
         return response
-    sample = Sample.objects.filter(batch__identifier=batchid,code=identifier)
-    if not len(sample) == 1:
+    # If we are working with a "pre-loaded" batch
+    batch = get_object_or_404(Batch,identifier=batchid)
+    sample = Sample.objects.filter(batch=batch,code=identifier)
+    if batch.preloaded and not len(sample) == 1:
         response = JsonResponse({"error":
                    _("Wrong Sample Code {0}:{1}").format(batchid,identifier)})
         response.status_code = 404
         return response
-    if sample[0].tube:
+    if len(sample) and sample[0].tube:
         response = JsonResponse({"error": _("Sample {0} Added Already").format(identifier)})
         response.status_code = 404
         return response
+    # If we do not have a sample yet, we do not have a pre-loaded batch
+    if not batch.preloaded and len(sample) == 0:
+        sample = [Sample()]
+        sample[0].code = identifier
+        sample[0].batch = batch
+        sample[0].save()
 
     # Place the sample in the next available tube
     rack.insertSample(sample[0])
@@ -378,7 +374,7 @@ def upload(request):
     batch.save()
     request.session['pooling_batch'] = batch.identifier
     request.session['pooling_poolsize'] = batch.poolsize
-    # If we do not have a file, it's a "free" batch
+    # If we do not have a file, it's a "pre-loaded" batch
     if len(request.FILES):
         samples = request.FILES['samples']
         import csv,io
@@ -389,6 +385,9 @@ def upload(request):
             sample.batch = batch
             sample.code = line['code']
             sample.save()
+    else:
+        batch.preloaded = False
+        batch.save()
     text = _('Batch {0} with {1} samples uploaded successfully')
     messages.success(request,
                      text.format(batch.identifier,
