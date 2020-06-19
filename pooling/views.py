@@ -94,7 +94,8 @@ def history(request):
 
     racks = Rack.objects.filter(finished=True,modifiedOn__date=date)
     if racks: date = racks.first().modifiedOn.date()
-    return render(request,'pooling/history.html',{'racks': racks, 'date': date})
+    return render(request,'pooling/history.html',
+                  {'racks': racks, 'date': date})
 
 
 @csrf_exempt
@@ -110,7 +111,9 @@ def moveSample(request):
     if not request.method == 'POST':
        return HttpResponse("Bad method",status=400,content_type="text/plain") 
     # We first verify that the request comes from one of our robots
-    robot = get_object_or_404(Robot,ip=request.remoteip)
+    # They MUST (RFC 2119) be directly connected to the server
+    remoteip = request.META.get('REMOTE_ADDR')
+    robot = get_object_or_404(Robot,ip=remoteip)
     data = json.loads(request.body)
     # Get source rack
     rackO = get_object_or_404(Rack,robot=robot,
@@ -120,7 +123,7 @@ def moveSample(request):
                                    row=data['source']['row'],
                                    col=data['source']['col'])
     # Find the moving sample
-    sample = get_object_or_404(Sample,tube=tube)
+    sample = get_object_or_404(Sample,tube=tubeO)
 
     # Get destination rack
     rackD = get_object_or_404(Rack,robot=robot,
