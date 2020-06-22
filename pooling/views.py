@@ -83,7 +83,7 @@ def newRack(request,tray):
     rack = Rack()
     rack.racktype = 1
     rack.position = tray
-    if tray == 2:
+    if int(tray) == 2:
         # Mark as a pooling rack
         rack.pool = True
     # If the rack is created from the robot view, indicate so
@@ -277,7 +277,7 @@ def move(request):
     """
 
     request.session['pooling_simulating'] = True
-    rack = get_object_or_404(Rack,position=2)
+    rack = get_object_or_404(Rack,robot=None,position=2)
     poolsize = request.session.get('pooling_poolsize',
                                    settings.POOL_TUBE_SAMPLES)
     # Deepwells leave station with all samples in them if there is any

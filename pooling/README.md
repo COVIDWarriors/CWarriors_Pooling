@@ -35,7 +35,7 @@ It traces the pooling of samples from up to four 4x6 racks into pools on a fith 
 
 - All errors in the code are mine: Victoriano Giralt
 
-Good ideas come from Dr. mercedes Pérez input.
+Good ideas come from Dr. Mercedes Pérez input.
 
 Bug crashing, testing and support come from the rest of the CWarriors core develpment team:
 
@@ -50,6 +50,6 @@ The protocol has been executed with the help on the field of:
 
 Finally, all this project would not have been possible without the ideas and support of:
 
-- Dr Rocio Martínez
+- Dr. Rocio Martínez
 - Dr. Andreu Veà
 

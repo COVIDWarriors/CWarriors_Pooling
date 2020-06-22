@@ -295,6 +295,9 @@ class Rack(models.Model):
     def save(self, *args, **kwargs):
         if not self.identifier or self.identifier.strip() == '':
             self.identifier = uuid.uuid4().hex
+        # Verifiy that pooling racks are marked as such
+        if self.position == 2 and not self.pool:
+            self.pool = True
                 
         super(Rack, self).save()
 
