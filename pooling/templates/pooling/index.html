@@ -47,7 +47,7 @@ $Id: $
           {% csrf_token %}
         <div class="row">
           <span class="col-md-2 text-left">
-            <a href="upload" class="btn btn-success text-right">
+            <a href="upload" class="btn btn-info text-right">
                {% trans "Upload sample batch" %}</a>
           </span>
           <span class="col-md-8 text-center"> &nbsp; </span>
@@ -55,7 +55,7 @@ $Id: $
         </div>
         <div class="row">
           <span class="col-md-2 text-left">
-            <a href="history" class="btn btn-success text-right">
+            <a href="history" class="btn btn-info text-right">
                {% trans "Show processed batches" %}</a>
           </span>
           <span class="col-md-8 text-center">
@@ -71,7 +71,8 @@ $Id: $
               </select>
           </span>
           <span class="col-md-2 text-right">
-              <input type="Submit" class="btn btn-success" value="Load batch">
+              <input type="Submit" class="btn btn-info"
+                     value="{% trans "Load batch" %}">
           </span>
         </div>
         </form>
@@ -79,20 +80,64 @@ $Id: $
     </div> <!-- Controls panel ends -->
     <div class="panel panel-primary col-md-12">
       <div class="panel-heading">
-        <h3>{% trans "Pooling station" %}</h3>
+        <div class="row">
+          <div class="col-md-8">
+            <h3>
+              {% trans "Pooling station" %}
+              {% if request.session.pooling_robot %}
+              ({% trans "robot view" %})
+              {% else %}
+              ({% trans "rack loading" %})
+              {% endif %}
+            </h3>
+          </div>
+          <div class="col-md-4 text-right">
+            {% if request.session.pooling_robot %}
+            <a href="togle" class="btn btn-default">
+              {% trans "Rack Loading" %}
+            </a>
+            {% else %}
+            <a href="togle" class="btn btn-default">
+              {% trans "Display Robot" %}
+            </a>
+            {% endif %}
+          </div>
+        </div>
       </div>
       <div class="panel-body">
         <div class="row">
           <div class="panel panel-primary col-md-4">
             <div class="panel-heading">
             {% if rack4 %}
-              <button class="btn btn-success"
+              <button class="btn btn-default"
                       onClick="$('#RackCode').html('{{rack4.identifier}}');
                                $('#RackData').load('{% url "pooling:show" rack4.id %}');
                                $('#Rack').modal();
                               ">
               {% trans "View" %}</button>
               {{ rack4.identifier }}
+            {% elif freeracks %}
+              <div class="row">
+                <form action="loadrack/4" method="post">
+                  {% csrf_token %}
+                  <div class="col-md-9">
+                    <select id="rack" name="rack"
+                            class="form-control" style="text: black;">
+                      {% for r in freeracks %}
+                      <option value="{{r.id}}">{{r}}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="col-md-1">
+                    <input type="Submit" class="btn btn-default"
+                           value="{% trans "Load rack" %}">
+                  </div>
+                </form>
+              </div>
+            {% else %}
+              <a href="newrack/4" class="btn btn-default">
+                {% trans "New rack" %}
+              </a>
             {% endif %}
             </div>
             <div class="panel-body">
@@ -104,7 +149,7 @@ $Id: $
                    {% for g in cols %}
                    <td id="R{{rack4.position}}{{g.row}}{{g.col}}"
                       style="text-align: center;
-                      {% if g.samples %}background-color: green{% endif %}">
+                      {% if g.samples %}background-color: lime{% endif %}">
                       {{g.samples}}
                   </td>
                   {% endfor %}
@@ -129,7 +174,9 @@ $Id: $
               </div>
             </div> <!-- Sample entry area ends -->
             <div class="panel panel-primary col-md-4 text-center">
-              <a class="col-md-12 btn btn-success p-3 text-center" href="move">
+              <a class="col-md-12 btn btn-info p-3 text-center"
+                 {%if refresh%}disabled="disabled"{%endif%}
+                 href="move">
                 {% trans "Simulate Pooling" %}
               </a>
             </div> <!-- End Pool button ends -->
@@ -148,21 +195,57 @@ $Id: $
             </div> <!-- Tube entry area ends -->
             <div class="panel panel-primary col-md-4 text-center">
               <a class="col-md-12 btn btn-danger p-3 text-center"
+                 {%if refresh%}disabled="disabled"{%endif%}
                  href="finish">
-                {% trans "Remove Pools Rack" %}
+                {% trans "Remove Racks" %}
               </a>
-            </div> <!-- End process button ends -->
+            </div> <!-- Remove racks button ends -->
+            {% if request.session.pooling_robot %}
+            <div class="panel panel-primary col-md-4 text-center">
+              <a class="col-md-12 btn btn-danger p-3 text-center"
+                 {%if refresh%}
+                 href="stop">
+                {% trans "Stop Process" %}
+                {% else %}
+                 href="start">
+                {% trans "Start Process" %}
+                {% endif %}
+              </a>
+            </div> <!-- Star/end process button ends -->
+            {% endif %}
           </div> <!-- Position 5 ends -->
           <div class="panel panel-primary col-md-4">
             <div class="panel-heading">
             {% if rack6 %}
-            <button class="btn btn-success"
+            <button class="btn btn-default"
                     onClick="$('#RackCode').html('{{rack6.identifier}}');
                              $('#RackData').load('{% url "pooling:show" rack6.id %}');
                              $('#Rack').modal();
                             ">
               {% trans "View" %}</button>
             {{ rack6.identifier }}
+            {% elif freeracks %}
+              <div class="row">
+                <form action="loadrack/6" method="post">
+                  {% csrf_token %}
+                  <div class="col-md-9">
+                    <select id="rack" name="rack"
+                            class="form-control" style="text: black;">
+                      {% for r in freeracks %}
+                      <option value="{{r.id}}">{{r}}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="col-md-1">
+                    <input type="Submit" class="btn btn-default"
+                           value="{% trans "Load rack" %}">
+                  </div>
+                </form>
+              </div>
+            {% else %}
+              <a href="newrack/6" class="btn btn-default">
+                {% trans "New rack" %}
+              </a>
             {% endif %}
             </div>
             <div class="panel-body">
@@ -174,7 +257,7 @@ $Id: $
                   {% for g in cols %}
                   <td id="R{{rack6.position}}{{g.row}}{{g.col}}"
                       style="text-align: center;
-                             {% if g.samples %}background-color: green{% endif %}">
+                             {% if g.samples %}background-color: lime{% endif %}">
                       {{g.samples}}
                   </td>
                   {% endfor %}
@@ -188,13 +271,35 @@ $Id: $
           <div class="panel panel-primary col-md-4">
             <div class="panel-heading">
             {% if rack1 %}
-            <button class="btn btn-success"
+            <button class="btn btn-default"
                     onClick="$('#RackCode').html('{{rack1.identifier}}');
                              $('#RackData').load('{% url "pooling:show" rack1.id %}');
                              $('#Rack').modal();
                             ">
               {% trans "View" %}</button>
             {{ rack1.identifier }}
+            {% elif freeracks %}
+              <div class="row">
+                <form action="loadrack/1" method="post">
+                  {% csrf_token %}
+                  <div class="col-md-9">
+                    <select id="rack" name="rack"
+                            class="form-control" style="text: black;">
+                      {% for r in freeracks %}
+                      <option value="{{r.id}}">{{r}}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="col-md-1">
+                    <input type="Submit" class="btn btn-default"
+                           value="{% trans "Load rack" %}">
+                  </div>
+                </form>
+              </div>
+            {% else %}
+              <a href="newrack/1" class="btn btn-default">
+                {% trans "New rack" %}
+              </a>
             {% endif %}
             </div>
             <div class="panel-body">
@@ -206,7 +311,7 @@ $Id: $
                   {% for g in cols %}
                   <td id="R{{rack1.position}}{{g.row}}{{g.col}}"
                       style="text-align: center;
-                             {% if g.samples %}background-color: green{% endif %}">
+                             {% if g.samples %}background-color: lime{% endif %}">
                       {{g.samples}}
                   </td>
                   {% endfor %}
@@ -218,13 +323,36 @@ $Id: $
           <div class="panel panel-primary col-md-4">
             <div class="panel-heading">
             {% if rackf %}
-            <button class="btn btn-success"
+            <button class="btn btn-default"
                     onClick="$('#RackCode').html('{{rackf.identifier}}');
                              $('#RackData').load('{% url "pooling:show" rackf.id %}');
                              $('#Rack').modal();
                             ">
               {% trans "View" %}</button>
             {{ rackf.identifier }}
+            <span id="refreshstatus"></span>
+            {% elif poolracks %}
+              <div class="row">
+                <form action="loadrack/2" method="post">
+                  {% csrf_token %}
+                  <div class="col-md-9">
+                    <select id="rack" name="rack"
+                            class="form-control" style="text: black;">
+                      {% for r in poolracks %}
+                      <option value="{{r.id}}">{{r}}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="col-md-1">
+                    <input type="Submit" class="btn btn-default"
+                           value="{% trans "Load rack" %}">
+                  </div>
+                </form>
+              </div>
+            {% else %}
+              <a href="newrack/2" class="btn btn-default">
+                {% trans "New rack" %}
+              </a>
             {% endif %}
             </div>
             <div class="panel-body">
@@ -234,10 +362,10 @@ $Id: $
                 <tr>
                   <td><strong>{{ row }}</strong></td>
                   {% for g in cols %}
-                  <td id="Rf{{g.row}}{{g.col}}"
+                  <td id="R2{{g.row}}{{g.col}}"
                       style="text-align: center;
-                             {% if g.tube %}background-color: green{% endif %}">
-                    <span id="Cf{{g.row}}{{g.col}}">
+                             {% if g.tube %}background-color: lime{% endif %}">
+                    <span id="C2{{g.row}}{{g.col}}">
                       {{g.samples}}</span>
                   </td>
                   {% endfor %}
@@ -249,13 +377,35 @@ $Id: $
           <div class="panel panel-primary col-md-4">
             <div class="panel-heading">
             {% if rack3 %}
-              <button class="btn btn-success"
+              <button class="btn btn-default"
                       onClick="$('#RackCode').html('{{rack3.identifier}}');
                                $('#RackData').load('{% url "pooling:show" rack3.id %}');
                                $('#Rack').modal();
                               ">
                 {% trans "View" %}</button>
               {{ rack3.identifier }}
+            {% elif freeracks %}
+              <div class="row">
+                <form action="loadrack/3" method="post">
+                  {% csrf_token %}
+                  <div class="col-md-9">
+                    <select id="rack" name="rack"
+                            class="form-control" style="text: black;">
+                      {% for r in freeracks %}
+                      <option value="{{r.id}}">{{r}}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="col-md-1">
+                    <input type="Submit" class="btn btn-default"
+                           value="{% trans "Load rack" %}">
+                  </div>
+                </form>
+              </div>
+            {% else %}
+              <a href="newrack/3" class="btn btn-default">
+                {% trans "New rack" %}
+              </a>
             {% endif %}
             </div>
             <div class="panel-body">
@@ -267,7 +417,7 @@ $Id: $
                   {% for g in cols %}
                   <td id="R{{rack3.position}}{{g.row}}{{g.col}}"
                       style="text-align: center;
-                             {% if g.samples %}background-color: green{% endif %}">
+                             {% if g.samples %}background-color: lime{% endif %}">
                       {{g.samples}}
                   </td>
                   {% endfor %}
@@ -289,7 +439,7 @@ $Id: $
             data: sfrm.serialize(),
             success: function (data) {
                 $('#identifier').val('');
-                $('#R'+data.pos+''+data.row+''+data.col).css('background-color','green');
+                $('#R'+data.pos+''+data.row+''+data.col).css('background-color','lime');
                 $('#R'+data.pos+''+data.row+''+data.col).html(data.samples);
             },
             error: function (data) {
@@ -306,29 +456,34 @@ $Id: $
             data: tfrm.serialize(),
             success: function (data) {
                 $('#tubeid').val('');
-                $('#Rf'+data.row+''+data.col).css('background-color','green');
-                $('#Rf'+data.row+''+data.col).html(data.samples);
+                $('#R2'+data.row+''+data.col).css('background-color','lime');
+                $('#R2'+data.row+''+data.col).html(data.samples);
             },
             error: function (data) {
                 alert(data.responseJSON.error);
             },
         });
     });
-{% if refresh %}}
+{% if refresh %}
 (function worker() {
-    $.getJSON(
+    $('#refreshstatus').html('Refreshing...');
+    $.getJSON({
         url: '{% url 'pooling:refresh' %}',
         success: function(result){
-            $.each(result, function(data){
-              $(data.position).html(data.samples);  
-              //$(data.position).css({'background-color': '#fff'});
+            if (result.data == 'reload') {location.reload();};
+            $.each(result.data, function(i,value){
+              $('#'+value.cell).html(value.samples);  
+              if ( value.samples == 0 ) {
+                $('#'+value.cell).css({'background-color': '#fff'});
+                };
               })
             },
         complete: function() {
             // Schedule the next request when the current one's complete
-            setTimeout(worker, {{ refresh }});
+            setTimeout(worker, {{ refresh }}*1000);
+            $('#refreshstatus').html('Waiting {{ refresh }}s ...');
             }
-        );
+        });
 })();
 {% endif %}
 </script>

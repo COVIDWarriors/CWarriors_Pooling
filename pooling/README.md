@@ -9,6 +9,7 @@ It traces the pooling of samples from up to four 4x6 racks into pools on a fith 
 
 - Add 'pooling' to the project installed apps in settings.
 - Add the default number of samples per pool in settings as POOL_TUBE_SAMPLES (integer)
+- Add a refresh interval for displaying the robot page while wainting for updates form the real hardware in setings as POOLING_REFRESH in seconds.
 - Add the application to the project urls.py with
       ```python
       url(r'^pooling/', include('pooling.urls')),

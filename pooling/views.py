@@ -31,38 +31,85 @@ def index(request):
     batchid = request.session.get('pooling_batch',False)
     if batchid:
         batch = get_object_or_404(Batch,identifier=batchid)
+    # Sample racks
+    freeracks = Rack.objects.filter(position=0,pool=False,finished=False)
+    poolracks = Rack.objects.filter(position=0,pool=True,finished=False)
     # The rack list
     racks = {}
+    # Are we working on a robot or loading
+    robot = None
+    robotid = request.session.get('pooling_robot',False)
+    if robotid:
+        robot = Robot.objects.filter(identifier=robotid)
     # No refresh until the pooling process starts on a connected robot
     refresh = False
+    if request.session.get('pooling_atwork',False):
+        refresh = settings.POOLING_REFRESH
 
-    # If there are no free racks, we create and place them
-    # but only now that we know the robot we are working with
+    # We display racks on their corresponding trays
     for tray in [2]+ordering:
-        r = Rack.objects.filter(position=tray)
-        if not r:
-            racks[tray] = Rack()
-            racks[tray].racktype = 1
-            racks[tray].position = tray
-            racks[tray].save()
-        else:
+        r = Rack.objects.filter(position=tray,robot=robot)
+    #    if not r:
+    #   else:
+        if r:
             racks[tray] = r[0]
+        else:
+            racks[tray] = None
             
     # If there is no current rack,
     # or the one in the session is not anymore in the robot
     # we start with the first one, insertion will take care of filling control
     current = request.session.get('pooling_rack',False)
-    if current not in [racks[r].id for r in racks ]:
-        request.session['pooling_rack'] = racks[ordering[0]].id
+    if current not in [racks[r].id for r in racks if racks[r]]:
+        if racks[ordering[0]]:
+            request.session['pooling_rack'] = racks[ordering[0]].id
 
     return render(request,'pooling/index.html',{'refresh': refresh,
                                                 'batches': batches,
+                                                'freeracks': freeracks,
+                                                'poolracks': poolracks,
                                                 'batch': batch,
                                                 'rackf': racks[2],
                                                 'rack1': racks[1],
                                                 'rack3': racks[3],
                                                 'rack4': racks[4],
                                                 'rack6': racks[6]})
+
+
+def newRack(request,tray):
+    """
+    Creates a new empty rack for a given tray
+    """
+    rack = Rack()
+    rack.racktype = 1
+    rack.position = tray
+    if tray == 2:
+        # Mark as a pooling rack
+        rack.pool = True
+    # If the rack is created from the robot view, indicate so
+    robotid = request.session.get('pooling_robot',False)
+    if robotid:
+        robot = Robot.objects.filter(identifier=robotid)
+        rack.robot = robot[0]
+    rack.save()
+    return HttpResponseRedirect(reverse('pooling:inicio'))
+
+
+def loadRack(request,tray):
+    """
+    Loads a rack onto a tray, on the current robot if there is one
+    """
+    if request.method == "POST":
+       rackid = request.POST.get('rack',None)
+    if rackid:
+        rack = get_object_or_404(Rack,pk=rackid)
+    robotid = request.session.get('pooling_robot',False)
+    if robotid:
+        robot = Robot.objects.filter(identifier=robotid)
+        rack.robot = robot[0]
+    rack.position = tray
+    rack.save()
+    return HttpResponseRedirect(reverse('pooling:inicio'))
 
 
 def batch(request):
@@ -139,27 +186,97 @@ def moveSample(request):
     return HttpResponse("OK",status=200,content_type="text/plain") 
     
 
+def start(request):
+    """
+    Starts refreshing the robot display, waiting for movements
+    """
+    # Somo consistency checks
+    robot = get_object_or_404(Robot,
+                              identifier=request.session.get('pooling_robot',''))
+    rack = Rack.objects.filter(robot=robot,position=2)
+    if len(rack) == 0:
+        messages.error(request,_('There is no rack on tray 2'))
+        return HttpResponseRedirect(reverse('pooling:inicio'))
+    rack = rack[0]
+    poolsize = request.session.get('pooling_poolsize',
+                                   settings.POOL_TUBE_SAMPLES)
+    # Deepwells leave station with all samples in them if there is any
+    if rack.isFull(poolsize):
+        messages.error(request,_('{0} is full').format(rack))
+        return HttpResponseRedirect(reverse('pooling:inicio'))
+    if len(rack.tube_set.all()) == 0:
+        messages.error(request,
+                _('There are no tubes in {0} for the pools').format(rack))
+        return HttpResponseRedirect(reverse('pooling:inicio'))
+    samples = 0
+    racks = Rack.objects.filter(position__in=ordering)
+    for r in racks:
+        samples += r.numSamples()
+    if (rack.numTubes()*poolsize - rack.numSamples()) < samples:
+        messages.error(request,
+                _('There are not enough free tubes in {0}').format(rack))
+        return HttpResponseRedirect(reverse('pooling:inicio'))
+    request.session['pooling_atwork'] = True
+    return HttpResponseRedirect(reverse('pooling:inicio'))
+
+
+def stop(request):
+    """
+    Stops refreshing the robot display and waiting for movements
+    """
+    # Safewarding, just in case
+    if request.session.get('pooling_atwork',False):
+        del (request.session['pooling_atwork'])
+    return HttpResponseRedirect(reverse('pooling:inicio'))
+
+
+def togle(request):
+    """
+    Changes the view from robot display to rack loading and back
+    """
+    robot = request.session.get('pooling_robot',False)
+    if robot:
+        del request.session['pooling_robot']
+    else:
+        robot = Robot.objects.first()
+        request.session['pooling_robot'] = robot.identifier
+
+    return HttpResponseRedirect(reverse('pooling:inicio'))
+
+
 def refresh(request):
     """
     Updates the display showing movements sent from the robot.
     """
     # Find the robot we are presenting
-    robot = get_object_or_404(Robot,
-                              identifier=session.get('pooling_robot',''))
+    robotid = request.session.get('pooling_robot','')
+    robot = get_object_or_404(Robot, identifier=robotid)
     # Get the racks in the robot and fill the grid
-    data = {}
-    for rack in Rack.objects.filter(robot=robot):
+    data = []
+    # Ready for detecting the end of the process
+    racks = Rack.objects.filter(robot=robot)
+    count = len(racks)
+    for rack in racks:
+        if rack.isEmpty(): count -= 1
         for g in rack.grid(): 
-            data['cell'] = 'R{0}{1}{2}'.format(rack.tray,g['row'],g['col'])
-            data['samples'] = g['samples']
+            cell = {}
+            cell['cell'] = 'R{0}{1}{2}'.format(rack.position,g['row'],g['col'])
+            cell['samples'] = g['samples']
+            data.append(cell)
+    # If there is only one non-empty rack, the operation has finished
+    if count == 1:
+        if request.session.get('pooling_atwork',False):
+            del request.session['pooling_atwork']
+        data = 'reload'
     return JsonResponse({'data': data})
 
 
 def move(request):
     """
-    Moves all samples into the pooling rack
+    Simulates pooling by moving all samples into the pooling rack
     """
 
+    request.session['pooling_simulating'] = True
     rack = get_object_or_404(Rack,position=2)
     poolsize = request.session.get('pooling_poolsize',
                                    settings.POOL_TUBE_SAMPLES)
@@ -198,29 +315,48 @@ def finish(request):
     """
     Finishes the run and moves all racks out of the pooling robot
     """
-    rack = get_object_or_404(Rack,position=2)
-    # Check if the poolling has been done
-    if rack.position == 2 and rack.isEmpty():
-        messages.error(request,_('Samples have not been pooled into {0}').format(rack))
-        return HttpResponseRedirect(reverse('pooling:inicio'))
+    robot = request.session.get('pooling_robot',False)
+    if not robot:
+        rack = get_object_or_404(Rack,position=2)
+    else:
+        rack = get_object_or_404(Rack,robot__identifier=robot,position=2)
+    # If we are on a robot or simulating, check if the poolling has been done
+    if (request.session.get('pooling_robot',False) or
+        request.session.get('pooling_simulating',False)):
+        if rack.position == 2 and rack.isEmpty():
+            messages.error(request,
+                    _('Samples have not been pooled into {0}').format(rack))
+            return HttpResponseRedirect(reverse('pooling:inicio'))
         
-    # Remove racks if they are empty
+    # Remove racks
     for tray in ordering:
-        r = Rack.objects.filter(position=tray)
+        if not robot:
+            r = Rack.objects.filter(position=tray)
+        else:
+            r = Rack.objects.filter(robot__identifier=robot,position=tray)
         if len(r) == 1:
-            if r[0].isEmpty():
-                r[0].position = 0
-                r[0].save()
-            else:
-                messages.error(request,_('Rack {0} is nor empty').format(rack))
-                return HttpResponseRedirect(reverse('pooling:inicio'))
+            if (request.session.get('pooling_robot',False) or
+                request.session.get('pooling_simulating',False)):
+                if not r[0].isEmpty():
+                    messages.error(request,
+                                   _('Rack {0} is nor empty').format(rack))
+                    return HttpResponseRedirect(reverse('pooling:inicio'))
+            r[0].position = 0
+            r[0].robot = None
+            r[0].save()
 
-    # And the pooling racks leave the robot as well
+    # And the pooling rack leaves the robot as well
     rack.position = 0
-    rack.finished = True
+    rack.robot = None
+    # We mark rack as finished if removing from robot or simulating
+    if (request.session.get('pooling_robot',False) or
+        request.session.get('pooling_simulating',False)): rack.finished = True
     rack.save()
     # No current rack for the session anymore
     del request.session['pooling_rack']
+    # If we were simulating, simulation has finished
+    if request.session.get('pooling_simulating',False):
+        del request.session['pooling_simulating']
     messages.success(request,_('{0} removed. Pooling finished.').format(rack))
 
     return HttpResponseRedirect(reverse('pooling:inicio'))
@@ -234,29 +370,24 @@ def loadTube(request):
 
     racks = Rack.objects.filter(position=2)
     if not len(racks) == 1:
-        response = JsonResponse({"error": _("Wrong Rack Identifier {0}").format(rackid)})
+        response = JsonResponse({"error": _("Wrong Rack for tray 2")})
         response.status_code = 404
         return response
     # We have a single rack as expected
     rack = racks[0]
-    if rack.isFull() and rack.position == ordering[-1]:
-        response = JsonResponse({"error": _("All racks are full")})
-        response.status_code = 404
-        return response
     if rack.isFull():
-        response = JsonResponse({"error": _("The pooling rack is full")})
-        response.status_code = 404
+        return JsonResponse({"error": _("The pooling rack is full")},
+                            status = 404)
     if request.method == 'POST':
        identifier = request.POST.get('tubeid',None)
     if not identifier:
-        response = JsonResponse({"error": _("No Tube Identifier")})
-        response.status_code = 404
-        return response
+        return JsonResponse({"error": _("No Tube Identifier")},
+                            status = 404)
     tube = Tube.objects.filter(identifier=identifier)
     if tube:
-        response = JsonResponse({"error": _("Tube {0} Added Already").format(identifier)})
-        response.status_code = 404
-        return response
+        return JsonResponse({"error":
+                             _("Tube {0} Added Already").format(identifier)},
+                            status = 404)
 
     tube = Tube()
     tube.identifier = identifier
@@ -276,16 +407,15 @@ def loadSample(request):
     rackid = request.session.get('pooling_rack', 0)
     racks = Rack.objects.filter(id=rackid)
     if not len(racks) == 1:
-        response = JsonResponse({"error": _("Wrong Rack Identifier {0}").format(rackid)})
-        response.status_code = 404
-        return response
+        return JsonResponse({"error":
+                             _("Wrong Rack Identifier {0}").format(rackid)},
+                            status = 404)
     # We have a single rack as expected
     rack = racks[0]
     full = rack.isFull()
     if full and rack.position == ordering[-1]:
-        response = JsonResponse({"error": _("All racks are full")})
-        response.status_code = 404
-        return response
+        return JsonResponse({"error": _("All racks are full")},
+                            status = 404)
     if full:
         # Let's start filling the next rack
         nextrack = ordering[ordering.index(rack.position)+1]
@@ -295,21 +425,20 @@ def loadSample(request):
     if request.method == 'POST':
        identifier = request.POST.get('identifier',None)
     if not identifier:
-        response = JsonResponse({"error": _("No Sampe Identifier")})
-        response.status_code = 404
-        return response
+        return JsonResponse({"error": _("No Sample Identifier")},
+                            status = 404)
     # If we are working with a "pre-loaded" batch
     batch = get_object_or_404(Batch,identifier=batchid)
     sample = Sample.objects.filter(batch=batch,code=identifier)
     if batch.preloaded and not len(sample) == 1:
-        response = JsonResponse({"error":
-                   _("Wrong Sample Code {0}:{1}").format(batchid,identifier)})
-        response.status_code = 404
-        return response
+        return JsonResponse({"error":
+                             _("Wrong Sample Code {0}:{1}").format(batchid,
+                                                                  identifier)},
+                            status = 404)
     if len(sample) and sample[0].tube:
-        response = JsonResponse({"error": _("Sample {0} Added Already").format(identifier)})
-        response.status_code = 404
-        return response
+        return JsonResponse({"error":
+                             _("Sample {0} Added Already").format(identifier)},
+                             status = 404)
     # If we do not have a sample yet, we do not have a pre-loaded batch
     if not batch.preloaded and len(sample) == 0:
         sample = [Sample()]

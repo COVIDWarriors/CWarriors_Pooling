@@ -103,9 +103,15 @@ class Batch(models.Model):
 
 
     def __str__(self):
-        return _('{0}: {1} -> {2} by {3}').format(self.identifier,
-                                                   self.started,self.finished,
-                                                   self.technician)
+        return _('{0}: {1} samples, {2} -> {3} by {4}').format(self.identifier,
+                                                               self.samples(),
+                                                               self.started,
+                                                               self.finished,
+                                                               self.technician)
+
+
+    def samples(self):
+        return len(self.sample_set.all())
 
 
     def save(self, *args, **kwargs):
@@ -130,6 +136,8 @@ class Rack(models.Model):
                                   db_index=True, editable=False)
     racktype = models.IntegerField(verbose_name=_('Rack type'),
                                    choices=TYPE,db_index=True)
+    pool = models.BooleanField(verbose_name=_('Pooling rack'),
+                               default=False,db_index=True)
     robot = models.ForeignKey(Robot,null=True)
     position = models.IntegerField(choices=POSITION,db_index=True,default=0)
     finished = models.BooleanField(verbose_name=_('Processing completed'),
@@ -186,7 +194,7 @@ class Rack(models.Model):
         # A rack is full if the number of full tubes equals number of slots
         # We pool into position 2
         size = self.numSlots()
-        if self.position == 2:
+        if self.pool :
             size = size * poolsize
         return self.numSamples() == size
 
@@ -205,7 +213,11 @@ class Rack(models.Model):
               g[0]['tubeid'] = t.id
               g[0]['tube'] = t.identifier
               samples = len(t.sample_set.all())
-              g[0]['samples'] = samples
+              if samples > 1 or self.pool :
+                identifier = t.identifier
+                if len(identifier) > 5: 
+                    identifier = '...{}'.format(identifier[-4:])
+                g[0]['samples'] = '{0}({1})'.format(identifier,samples)
               if samples == 1:
                   g[0]['samples'] = t.sample_set.first().code
               

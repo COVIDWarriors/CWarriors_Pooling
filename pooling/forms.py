@@ -19,5 +19,5 @@ class loadBatch(forms.Form):
     samples = forms.FileField(label=_('Samples file'),required=False)
     poolsize = forms.IntegerField(label=_('Pool size'),
                                   initial=settings.POOL_TUBE_SAMPLES)
-    techid = forms.IntegerField(label=_('Technician'),
+    techid = forms.IntegerField(label=_('Operator'),
                                 widget=forms.Select(choices=TECHS))
