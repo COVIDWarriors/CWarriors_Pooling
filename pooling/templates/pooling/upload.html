@@ -20,29 +20,31 @@ $Id: $
             <p>{{form.errors}}</p>
           </div>
           {% endif %}
-          <div class="form-group">
-            <label for="batchid" class="col-md-2 control-label">
+          <div class="form-group row">
+            <label for="batchid" class="col-md-4 control-label">
               {{ form.batchid.label }}</label>
-            <div class="col-md-1">
+            <div class="col-md-2">
               {{ form.batchid }}
             </div>
-            <label for="techid" class="col-md-1 control-label">
+            <label for="techid" class="col-md-2 control-label">
               {{ form.techid.label }}</label>
-            <div class="col-md-2">
+            <div class="col-md-4">
               {{ form.techid }}</label>
             </div>
+          </div>
+          <div class="form-group row">
             <label for="poolsize" class="col-md-1 control-label">
               {{ form.poolsize.label }}</label>
             <div class="col-md-1">
               {{ form.poolsize }}</label>
             </div>
-            <label for="samples" class="col-md-1 control-label">
+            <label for="samples" class="col-md-2 control-label">
               {{ form.samples.label }}</label>
-            <div class="col-md-3">
+            <div class="col-md-8">
               {{ form.samples }}
             </div>
           </div>
-          <div class="form-group">
+          <div class="form-group row">
             <button type="submit"
                     class="col-md-2 btn btn-success btn-lg btn-block">
               {% trans "Upload samples" %}</button>

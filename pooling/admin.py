@@ -21,7 +21,6 @@ admin.site.register(Technician,TechnicianAdmin)
 
 class RobotAdmin(admin.ModelAdmin):
     model = Robot
-    fields = ['identifier','ip','connected']
     list_editable = ['ip','connected']
     list_display = ['id','identifier','ip','connected']
     list_display_links = ['id','identifier']
@@ -63,12 +62,12 @@ class RackAdmin(admin.ModelAdmin):
     model = Rack
     inlines = [TubeAdmin]
     list_display = ['id','identifier','racktype','numSamples',
-                    'position','createdOn']
+                    'position','pool','createdOn']
     list_filter = ['racktype','position']
     list_editable = ['racktype']
     list_display_links = ['id','identifier']
     fieldsets = (
-        (None, {'fields': ('racktype','position'),},),
+        (None, {'fields': ('racktype','position','pool'),},),
     )
 
 

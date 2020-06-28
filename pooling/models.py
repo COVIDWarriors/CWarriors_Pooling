@@ -81,7 +81,9 @@ class Batch(models.Model):
                                   max_length=32, blank=True, null=True,
                                   db_index=True, editable=False)
     technician = models.ForeignKey(Technician)
-    poolsize = models.IntegerField(verbose_name=_('Pool size'),default=6)
+    poolsize = models.IntegerField(verbose_name=_('Pool size'),
+                                   default=settings.POOL_TUBE_SAMPLES)
+    preloaded = models.BooleanField(verbose_name=_('Pre-loaded batch'),default=True)
     started = models.DateTimeField(_('Processing started on'),
                                    db_index=True,null=True,blank=True)
     finished = models.DateTimeField(_('Processing completed on'),
@@ -101,9 +103,15 @@ class Batch(models.Model):
 
 
     def __str__(self):
-        return _('{0}: {1} -> {2} by {3}').format(self.identifier,
-                                                   self.started,self.finished,
-                                                   self.technician)
+        return _('{0}: {1} samples, {2} -> {3} by {4}').format(self.identifier,
+                                                               self.samples(),
+                                                               self.started,
+                                                               self.finished,
+                                                               self.technician)
+
+
+    def samples(self):
+        return len(self.sample_set.all())
 
 
     def save(self, *args, **kwargs):
@@ -128,6 +136,8 @@ class Rack(models.Model):
                                   db_index=True, editable=False)
     racktype = models.IntegerField(verbose_name=_('Rack type'),
                                    choices=TYPE,db_index=True)
+    pool = models.BooleanField(verbose_name=_('Pooling rack'),
+                               default=False,db_index=True)
     robot = models.ForeignKey(Robot,null=True)
     position = models.IntegerField(choices=POSITION,db_index=True,default=0)
     finished = models.BooleanField(verbose_name=_('Processing completed'),
@@ -184,7 +194,7 @@ class Rack(models.Model):
         # A rack is full if the number of full tubes equals number of slots
         # We pool into position 2
         size = self.numSlots()
-        if self.position == 2:
+        if self.pool :
             size = size * poolsize
         return self.numSamples() == size
 
@@ -203,7 +213,11 @@ class Rack(models.Model):
               g[0]['tubeid'] = t.id
               g[0]['tube'] = t.identifier
               samples = len(t.sample_set.all())
-              g[0]['samples'] = samples
+              if samples > 1 or self.pool :
+                identifier = t.identifier
+                if len(identifier) > 5: 
+                    identifier = '...{}'.format(identifier[-4:])
+                g[0]['samples'] = '{0}({1})'.format(identifier,samples)
               if samples == 1:
                   g[0]['samples'] = t.sample_set.first().code
               
@@ -211,24 +225,6 @@ class Rack(models.Model):
         return grid
 
    
-    def insertSample(self,sample,pool=False):
-        """
-        Places a sample in the first tube in the rack that's not full
-        The algorithm works in row first mode, i.e.:
-        A1,A2,A3,...,H10,H11,H12
-        """
-        if self.isFull(sample.batch.poolsize): return False
-        # Find the first tube that's not full
-        t = self.tube_set.order_by('row','col')
-        t = t.annotate(samples=models.Count('sample'))
-        if pool:
-            t = t.filter(samples__lt=sample.batch.poolsize).first()
-        else:
-            t = t.filter(samples=0).first()
-        sample.tube = t
-        sample.save()
-        return True
-
     def insertTube(self,tube):
         """
         Places a tube in the first free position in the rack
@@ -259,6 +255,33 @@ class Rack(models.Model):
 
         return True
 
+
+    def insertSample(self,sample,pool=False):
+        """
+        Places a sample in the first tube in the rack that's not full
+        The algorithm works in row first mode, i.e.:
+        A1,A2,A3,...,H10,H11,H12
+        """
+        samplesTube = 1
+        if pool:
+            samplesTube = sample.batch.poolsize
+        if self.isFull(samplesTube): return False
+        # Find the first tube that's not full
+        t = self.tube_set.order_by('row','col')
+        t = t.annotate(samples=models.Count('sample'))
+        if pool:
+            t = t.filter(samples__lt=sample.batch.poolsize).first()
+        else:
+            t = t.filter(samples=0).first()
+            if not t:
+                t = Tube()
+                t.identifier = sample.code
+                self.insertTube(t)
+        sample.tube = t
+        sample.save()
+        return True
+
+
     def __str__(self):
         return _('{0} with {1} samples {2}').format(
                  self.get_racktype_display(),
@@ -272,6 +295,9 @@ class Rack(models.Model):
     def save(self, *args, **kwargs):
         if not self.identifier or self.identifier.strip() == '':
             self.identifier = uuid.uuid4().hex
+        # Verifiy that pooling racks are marked as such
+        if self.position == 2 and not self.pool:
+            self.pool = True
                 
         super(Rack, self).save()
 

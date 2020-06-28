@@ -31,6 +31,6 @@ The protocol has been executed with the help on the field of:
 
 Finally, all this project would not have been possible without the ideas and support of:
 
-- Dr Rocio Martínez
+- Dr Rocio T. Martínez
 - Dr. Andreu Veà
 

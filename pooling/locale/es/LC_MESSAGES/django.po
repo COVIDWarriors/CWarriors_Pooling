@@ -1,0 +1,374 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-06-25 19:11+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+#: pooling/forms.py:18
+msgid "Batch identifier (leave blank to generate)"
+msgstr ""
+
+#: pooling/forms.py:19
+msgid "Samples file"
+msgstr ""
+
+#: pooling/forms.py:20 pooling/models.py:84
+msgid "Pool size"
+msgstr ""
+
+#: pooling/forms.py:22
+msgid "Operator"
+msgstr ""
+
+#: pooling/models.py:13 pooling/models.py:50 pooling/models.py:80
+#: pooling/models.py:134 pooling/models.py:309 pooling/models.py:359
+msgid "identifier"
+msgstr ""
+
+#: pooling/models.py:16
+msgid "IP address"
+msgstr ""
+
+#: pooling/models.py:18
+msgid "Can communicate with server"
+msgstr ""
+
+#: pooling/models.py:22 pooling/models.py:56 pooling/models.py:94
+#: pooling/models.py:147 pooling/models.py:317 pooling/models.py:371
+msgid "Created on"
+msgstr ""
+
+#: pooling/models.py:24 pooling/models.py:58 pooling/models.py:96
+#: pooling/models.py:149 pooling/models.py:319 pooling/models.py:373
+msgid "Modified on"
+msgstr ""
+
+#: pooling/models.py:53
+msgid "Name"
+msgstr ""
+
+#: pooling/models.py:86
+msgid "Pre-loaded batch"
+msgstr ""
+
+#: pooling/models.py:87
+msgid "Processing started on"
+msgstr ""
+
+#: pooling/models.py:89
+msgid "Processing completed on"
+msgstr ""
+
+#: pooling/models.py:101
+msgid "Batches"
+msgstr ""
+
+#: pooling/models.py:106
+#, python-brace-format
+msgid "{0}: {1} samples, {2} -> {3} by {4}"
+msgstr ""
+
+#: pooling/models.py:137
+msgid "Rack type"
+msgstr ""
+
+#: pooling/models.py:139
+msgid "Pooling rack"
+msgstr ""
+
+#: pooling/models.py:143
+msgid "Processing completed"
+msgstr ""
+
+#: pooling/models.py:286
+#, python-brace-format
+msgid "{0} with {1} samples {2}"
+msgstr ""
+
+#: pooling/models.py:341
+#, python-format
+msgid "Row %d does not exist"
+msgstr ""
+
+#: pooling/models.py:343
+#, python-format
+msgid "Column %d does not exist"
+msgstr ""
+
+#: pooling/models.py:357
+msgid "No"
+msgstr ""
+
+#: pooling/models.py:357
+msgid "Yes"
+msgstr ""
+
+#: pooling/models.py:357
+msgid "Unclear"
+msgstr ""
+
+#: pooling/models.py:358
+msgid "Low"
+msgstr ""
+
+#: pooling/models.py:358
+msgid "Medium"
+msgstr ""
+
+#: pooling/models.py:358
+msgid "High"
+msgstr ""
+
+#: pooling/models.py:362
+msgid "Sample code"
+msgstr ""
+
+#: pooling/models.py:365
+msgid "Processig completed"
+msgstr ""
+
+#: pooling/models.py:367
+msgid "Result"
+msgstr ""
+
+#: pooling/models.py:382
+#, python-brace-format
+msgid "{0} en {1}"
+msgstr ""
+
+#: pooling/templates/pooling/base.html:12
+#: pooling/templates/pooling/base.html:82
+msgid "Sample pooling with COVIDWarriors Opentrons robots"
+msgstr ""
+
+#: pooling/templates/pooling/history.html:15
+#: pooling/templates/pooling/rack_fill.html:24
+msgid "Sample"
+msgstr ""
+
+#: pooling/templates/pooling/history.html:33
+msgid "Date"
+msgstr ""
+
+#: pooling/templates/pooling/history.html:39
+msgid "Back"
+msgstr ""
+
+#: pooling/templates/pooling/index.html:17
+msgid "Rack"
+msgstr ""
+
+#: pooling/templates/pooling/index.html:33
+msgid "Tube"
+msgstr ""
+
+#: pooling/templates/pooling/index.html:43
+msgid "Controls"
+msgstr ""
+
+#: pooling/templates/pooling/index.html:51
+#: pooling/templates/pooling/upload.html:11
+msgid "Upload sample batch"
+msgstr ""
+
+#: pooling/templates/pooling/index.html:59
+msgid "Show processed batches"
+msgstr ""
+
+#: pooling/templates/pooling/index.html:75
+msgid "Load batch"
+msgstr ""
+
+#: pooling/templates/pooling/index.html:86
+msgid "Pooling station"
+msgstr ""
+
+#: pooling/templates/pooling/index.html:88
+msgid "robot view"
+msgstr ""
+
+#: pooling/templates/pooling/index.html:90
+msgid "rack loading"
+msgstr ""
+
+#: pooling/templates/pooling/index.html:97
+msgid "Rack Loading"
+msgstr ""
+
+#: pooling/templates/pooling/index.html:101
+msgid "Display Robot"
+msgstr ""
+
+#: pooling/templates/pooling/index.html:117
+#: pooling/templates/pooling/index.html:225
+#: pooling/templates/pooling/index.html:279
+#: pooling/templates/pooling/index.html:331
+#: pooling/templates/pooling/index.html:385
+msgid "View"
+msgstr ""
+
+#: pooling/templates/pooling/index.html:133
+#: pooling/templates/pooling/index.html:241
+#: pooling/templates/pooling/index.html:295
+#: pooling/templates/pooling/index.html:348
+#: pooling/templates/pooling/index.html:401
+msgid "Load rack"
+msgstr ""
+
+#: pooling/templates/pooling/index.html:139
+#: pooling/templates/pooling/index.html:247
+#: pooling/templates/pooling/index.html:301
+#: pooling/templates/pooling/index.html:354
+#: pooling/templates/pooling/index.html:407
+msgid "New rack"
+msgstr ""
+
+#: pooling/templates/pooling/index.html:164
+msgid "Load samples on 24 4x6 racks"
+msgstr ""
+
+#: pooling/templates/pooling/index.html:170
+msgid "Sample ID"
+msgstr ""
+
+#: pooling/templates/pooling/index.html:180
+msgid "Simulate Pooling"
+msgstr ""
+
+#: pooling/templates/pooling/index.html:185
+msgid "Load pool tubes on 4x6 rack on tray 2"
+msgstr ""
+
+#: pooling/templates/pooling/index.html:191
+msgid "Tube ID"
+msgstr ""
+
+#: pooling/templates/pooling/index.html:200
+msgid "Remove Racks"
+msgstr ""
+
+#: pooling/templates/pooling/index.html:208
+msgid "Stop Process"
+msgstr ""
+
+#: pooling/templates/pooling/index.html:211
+msgid "Start Process"
+msgstr ""
+
+#: pooling/templates/pooling/rack_fill.html:17
+#: pooling/templates/pooling/tube.html:5
+msgid "Batch"
+msgstr ""
+
+#: pooling/templates/pooling/rack_fill.html:28
+msgid "Finished"
+msgstr ""
+
+#: pooling/templates/pooling/tube.html:6
+msgid "Code"
+msgstr ""
+
+#: pooling/templates/pooling/upload.html:50
+msgid "Upload samples"
+msgstr ""
+
+#: pooling/views.py:198
+msgid "There is no rack on tray 2"
+msgstr ""
+
+#: pooling/views.py:205 pooling/views.py:285
+#, python-brace-format
+msgid "{0} is full"
+msgstr ""
+
+#: pooling/views.py:209 pooling/views.py:289
+#, python-brace-format
+msgid "There are no tubes in {0} for the pools"
+msgstr ""
+
+#: pooling/views.py:217 pooling/views.py:297
+#, python-brace-format
+msgid "There are not enough free tubes in {0}"
+msgstr ""
+
+#: pooling/views.py:309
+#, python-brace-format
+msgid "{0} filled"
+msgstr ""
+
+#: pooling/views.py:328
+#, python-brace-format
+msgid "Samples have not been pooled into {0}"
+msgstr ""
+
+#: pooling/views.py:342
+#, python-brace-format
+msgid "Rack {0} is nor empty"
+msgstr ""
+
+#: pooling/views.py:360
+#, python-brace-format
+msgid "{0} removed. Pooling finished."
+msgstr ""
+
+#: pooling/views.py:373
+msgid "Wrong Rack for tray 2"
+msgstr ""
+
+#: pooling/views.py:379
+msgid "The pooling rack is full"
+msgstr ""
+
+#: pooling/views.py:384
+msgid "No Tube Identifier"
+msgstr ""
+
+#: pooling/views.py:389
+#, python-brace-format
+msgid "Tube {0} Added Already"
+msgstr ""
+
+#: pooling/views.py:411
+#, python-brace-format
+msgid "Wrong Rack Identifier {0}"
+msgstr ""
+
+#: pooling/views.py:417
+msgid "All racks are full"
+msgstr ""
+
+#: pooling/views.py:428
+msgid "No Sample Identifier"
+msgstr ""
+
+#: pooling/views.py:435
+#, python-brace-format
+msgid "Wrong Sample Code {0}:{1}"
+msgstr ""
+
+#: pooling/views.py:440
+#, python-brace-format
+msgid "Sample {0} Added Already"
+msgstr ""
+
+#: pooling/views.py:493
+msgid "Wrong method"
+msgstr ""
+
+#: pooling/views.py:523
+#, python-brace-format
+msgid "Batch {0} with {1} samples uploaded successfully"
+msgstr ""
