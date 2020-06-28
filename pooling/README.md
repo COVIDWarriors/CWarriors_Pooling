@@ -11,9 +11,11 @@ It traces the pooling of samples from up to four 4x6 racks into pools on a fith 
 - Add the default number of samples per pool in settings as POOL_TUBE_SAMPLES (integer)
 - Add a refresh interval for displaying the robot page while wainting for updates form the real hardware in setings as POOLING_REFRESH in seconds.
 - Add the application to the project urls.py with
-      ```python
-      url(r'^pooling/', include('pooling.urls')),
-      ```
+
+   ```python
+   url(r'^pooling/', include('pooling.urls')),
+   ```
+
 - Finally, _makemigrations_ and _migrate_
 
 --------------
@@ -29,6 +31,28 @@ It traces the pooling of samples from up to four 4x6 racks into pools on a fith 
   - If the robot has IP connection to the server, the protocol will report each sample move to the server, and they will be reflected on the page.
 7. Once pooling has finished, press the red "Remove pools rack" button on the middle panel.
 8. That's all folks.
+
+--------------
+# Code for sending moves from the robots
+
+If you want to send teal moves from your robots to the tracing server, you have to add Python requests to your protocols and send lists of moves to the server. 
+
+The movements on the list MUST (RFC2119) be dictionaries like:
+
+   ```python
+   {'source': {'tray': 1, 'row': 'A', 'col': 1}, 
+   'destination': {'tray': 2, 'row': 'A', 'col': 1}}
+   ```
+
+Then, append each movement like above to a list and send to the server using requests.post, like
+
+   ```python
+   response=requests.post('http://serverip/path/tracing/movesample',json=data)
+   ```
+
+_serverip_ is your server IP address or name (Django has to be operational at that IP or name.
+_path_ is the path where your Django project is installed
+_data_ is the list of movement dictionaries (it may be just one movement)
 
 --------------
 # Acknowledgments
