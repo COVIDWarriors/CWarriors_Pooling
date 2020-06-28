@@ -47,7 +47,7 @@ The movements on the list MUST (RFC2119) be dictionaries like:
 Then, append each movement like above to a list and send to the server using requests.post, like
 
    ```python
-   response=requests.post('http://serverip/path/tracing/movesample',json=data)
+   response=requests.post('http://serverip/path/pooling/movesample',json=data)
    ```
 
 _serverip_ is your server IP address or name (Django has to be operational at that IP or name.
