@@ -5,6 +5,11 @@ This is a Django application to be deployed in any Django project.
 It traces the pooling of samples from up to four 4x6 racks into pools on a fith 4x6 rack.
 
 --------------
+# Moral pre-requisite
+
+I've invested a sizeable amount of my free time, even denting into my hours of sleep, in order to contribute to the fight against the global pandemic. If you use this code for controling protocols running on Opentrons robots you MUST (RFC 2119) publish your protocols for the global good. I have no way to force anyone to do this except through this paragraph, thus, the moral pre-requisite. Thank you.
+
+--------------
 # Installation
 
 - Add 'pooling' to the project installed apps in settings.

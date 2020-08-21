@@ -16,7 +16,7 @@ Dr. Mercedes Pérez Ruíz has been doing calculations with the number of daily s
 
 - All errors in the code are mine: Victoriano Giralt
 
-Good ideas come from Dr. mercedes Pérez input.
+Good ideas come from Dr. Mercedes Pérez input.
 
 Bug crashing, testing and support come from the rest of the CWarriors core develpment team:
 

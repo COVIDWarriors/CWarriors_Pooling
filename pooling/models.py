@@ -201,8 +201,7 @@ class Rack(models.Model):
 
     def grid(self):
         # It is easier to organise the tubes here than on the template
-        # There should be no empty places between tubes,
-        # better safe that sorry
+        # There should be no empty places between tubes, better safe that sorry
         grid = []
         for r in self.listRows():
             for c in self.listCols():
